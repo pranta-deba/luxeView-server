@@ -17,10 +17,11 @@ app.get("/", (req, res) => {
 });
 
 const client = new MongoClient(uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
   serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
+    version: "1",
+    strict: false, 
   },
 });
 async function run() {
@@ -74,7 +75,7 @@ async function run() {
       res.send(product);
     });
 
-    // Get products with pagination, search, price filter, and sort
+    // get products with pagination, search, price filter, and sort
     app.get("/products", async (req, res) => {
       try {
         const {
@@ -82,6 +83,7 @@ async function run() {
           minPrice = 0,
           maxPrice = 1000,
           sort = "price-asc",
+          brand = "",
           page = 1,
           limit = 10,
         } = req.query;
@@ -89,6 +91,7 @@ async function run() {
 
         const query = {
           productName: { $regex: search, $options: "i" },
+          brand: { $regex: brand, $options: "i" },
           price: { $gte: parseFloat(minPrice), $lte: parseFloat(maxPrice) },
         };
 
@@ -116,6 +119,12 @@ async function run() {
       } catch (error) {
         res.status(500).json({ error: error.message });
       }
+    });
+
+    // get all brand
+    app.get("/brands", async (req, res) => {
+      const brands = await productCollection.distinct("brand");
+      res.send(brands);
     });
 
     await client.db("admin").command({ ping: 1 });
