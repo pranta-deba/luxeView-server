@@ -31,6 +31,8 @@ async function run() {
     const productCollection = db.collection("products");
     const userCollection = db.collection("users");
 
+
+
     // register
     app.post("/register", async (req, res) => {
       const { name, email } = req.body;
@@ -46,6 +48,9 @@ async function run() {
       res.send(result);
     });
 
+
+
+
     // login
     app.post("/login", async (req, res) => {
       const { email } = req.body;
@@ -55,6 +60,9 @@ async function run() {
       }
       res.send(user);
     });
+
+
+
 
     // latest products
     app.get("/latest", async (req, res) => {
@@ -66,6 +74,9 @@ async function run() {
       res.send(latestProducts);
     });
 
+
+
+
     // detailed products
     app.get("/products/:id", async (req, res) => {
       const id = req.params.id;
@@ -75,13 +86,16 @@ async function run() {
       res.send(product);
     });
 
+
+
+
     // get products with pagination, search, price filter, and sort
     app.get("/products", async (req, res) => {
       try {
         const {
           search = "",
           minPrice = 0,
-          maxPrice = 1000,
+          maxPrice = 500,
           sort = "price-asc",
           brand = "",
           page = 1,
@@ -121,11 +135,16 @@ async function run() {
       }
     });
 
+
+
     // get all brand
     app.get("/brands", async (req, res) => {
       const brands = await productCollection.distinct("brand");
       res.send(brands);
     });
+
+
+    
 
     await client.db("admin").command({ ping: 1 });
     console.log(
