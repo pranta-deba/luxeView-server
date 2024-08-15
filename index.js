@@ -4,7 +4,7 @@ const dotenv = require("dotenv");
 const PORT = process.env.PORT || 5000;
 dotenv.config();
 const app = express();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.kdhebsc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Middleware
@@ -62,7 +62,16 @@ async function run() {
         .sort({ productCreationDateTime: -1 })
         .limit(10)
         .toArray();
-      res.json(latestProducts);
+      res.send(latestProducts);
+    });
+
+    // detailed products
+    app.get("/products/:id", async (req, res) => {
+      const id = req.params.id;
+      const product = await productCollection.findOne({
+        _id: new ObjectId(id),
+      });
+      res.send(product);
     });
 
     await client.db("admin").command({ ping: 1 });
