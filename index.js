@@ -74,6 +74,50 @@ async function run() {
       res.send(product);
     });
 
+    // Get products with pagination, search, price filter, and sort
+    app.get("/products", async (req, res) => {
+      try {
+        const {
+          search = "",
+          minPrice = 0,
+          maxPrice = 1000,
+          sort = "price-asc",
+          page = 1,
+          limit = 10,
+        } = req.query;
+        const skip = (page - 1) * limit;
+
+        const query = {
+          productName: { $regex: search, $options: "i" },
+          price: { $gte: parseFloat(minPrice), $lte: parseFloat(maxPrice) },
+        };
+
+        const sortOptions = {
+          "price-asc": { price: 1 },
+          "price-desc": { price: -1 },
+          "date-desc": { productCreationDateTime: -1 },
+        };
+
+        const products = await productCollection
+          .find(query)
+          .sort(sortOptions[sort])
+          .skip(parseInt(skip))
+          .limit(parseInt(limit))
+          .toArray();
+
+        const totalProducts = await productCollection.countDocuments(query);
+
+        res.json({
+          products,
+          totalProducts,
+          totalPages: Math.ceil(totalProducts / limit),
+          currentPage: parseInt(page),
+        });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
