@@ -45,6 +45,16 @@ async function run() {
       res.send(result);
     });
 
+    // login
+    app.post("/login", async (req, res) => {
+      const { email } = req.body;
+      const user = await userCollection.findOne({ email });
+      if (!user) {
+        return res.send({ message: "User not found" });
+      }
+      res.send(user);
+    });
+
     // latest products
     app.get("/latest", async (req, res) => {
       const latestProducts = await productCollection
