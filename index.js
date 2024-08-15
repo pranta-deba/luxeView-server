@@ -28,6 +28,22 @@ async function run() {
     await client.connect();
     const db = client.db("luxe-view");
     const productCollection = db.collection("products");
+    const userCollection = db.collection("users");
+
+    // register
+    app.post("/register", async (req, res) => {
+      const { name, email } = req.body;
+      const existingUser = await userCollection.findOne({ email });
+      if (existingUser) {
+        return res.send({ acknowledged: false, insertedId: null });
+      }
+      const result = await userCollection.insertOne({
+        name,
+        email,
+        createAt: new Date(),
+      });
+      res.send(result);
+    });
 
     // latest products
     app.get("/latest", async (req, res) => {
