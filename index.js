@@ -8,7 +8,16 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.kdhebsc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://luxe-view.web.app",
+      "https://luxe-view.firebaseapp.com",
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Basic route
@@ -21,7 +30,7 @@ const client = new MongoClient(uri, {
   useUnifiedTopology: true,
   serverApi: {
     version: "1",
-    strict: false, 
+    strict: false,
   },
 });
 async function run() {
@@ -30,8 +39,6 @@ async function run() {
     const db = client.db("luxe-view");
     const productCollection = db.collection("products");
     const userCollection = db.collection("users");
-
-
 
     // register
     app.post("/register", async (req, res) => {
@@ -48,9 +55,6 @@ async function run() {
       res.send(result);
     });
 
-
-
-
     // login
     app.post("/login", async (req, res) => {
       const { email } = req.body;
@@ -61,8 +65,28 @@ async function run() {
       res.send(user);
     });
 
+    // update user
+    app.patch("/update-user", async (req, res) => {
+      try {
+        const { email, name, photoURL } = req.body;
+        const result = await userCollection.updateOne(
+          { email: email },
+          { $set: { name, photoURL: photoURL } },
+          { upsert: true }
+        );
+        const message =
+          result.upsertedCount > 0
+            ? "User created successfully"
+            : "User updated successfully";
 
-
+        res.send({ message });
+      } catch (error) {
+        res.send({
+          message: "An error occurred while updating the user",
+          error,
+        });
+      }
+    });
 
     // latest products
     app.get("/latest", async (req, res) => {
@@ -74,9 +98,6 @@ async function run() {
       res.send(latestProducts);
     });
 
-
-
-
     // detailed products
     app.get("/products/:id", async (req, res) => {
       const id = req.params.id;
@@ -85,9 +106,6 @@ async function run() {
       });
       res.send(product);
     });
-
-
-
 
     // get products with pagination, search, price filter, and sort
     app.get("/products", async (req, res) => {
@@ -135,16 +153,11 @@ async function run() {
       }
     });
 
-
-
     // get all brand
     app.get("/brands", async (req, res) => {
       const brands = await productCollection.distinct("brand");
       res.send(brands);
     });
-
-
-    
 
     await client.db("admin").command({ ping: 1 });
     console.log(
